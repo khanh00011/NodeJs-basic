@@ -1,21 +1,24 @@
 
-import connection from "../configs/connectDB";
+import pool from "../configs/connectDB";
 
-const homePage = (req , res) => {
-    connection.query(
-        'SELECT * FROM `users` ',
-        function(err, results, fields) {
-          console.log("checkk mysql",err);
-          console.log(results); // results contains rows returned by server
-          return res.render("index.ejs" , {results} );
-        } 
-      );
-   
+const homePage = async (req , res) => {
+    const [rows , fields] = await pool.execute('SELECT * FROM users ');
+    return res.render("index.ejs", {data : rows} );
 }
-const aboutPage = (req , res) => {
-    return res.send("day là about nè!!!!!!!")
+const createUser = async (req , res) => {
+    let data = req.body;
+    await pool.execute('INSERT INTO users (firstName, lastName, Email, address) VALUES (? , ? , ? , ? ) ',[data.firstName , data.lastName , data.Email , data.address]);
+
+    return res.redirect('/');
 }
-export {
+const detailsPage =async (req , res) => {
+    let id = req.params.id;
+    const [user , fields] = await pool.execute('select * from users where id = ? ',[id])
+    return res.send(JSON.stringify(user));
+}
+
+module.exports = {
     homePage,
-    aboutPage
+    createUser,
+    detailsPage
 }
